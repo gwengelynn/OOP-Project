@@ -29,9 +29,4 @@ It helps teachers create, manage, and check quizzes faster, while giving student
 SmartQuiz follows Object-Oriented Programming (OOP) principles — *encapsulation, inheritance, polymorphism,* and *abstraction* — to ensure the system is organized, secure, and easy to update.  
 Our target users are **high school to college students and teachers**. We also designed the **UI based on colors and styles suited for this age group**, making the interface pleasing and engaging.
 
----
-
-📅 **University Project for:** Object-Oriented Programming  
-🎓 **Developed by:** 2CPE-1B | UE Caloocan  
-📘 **Year:** 2025
 
