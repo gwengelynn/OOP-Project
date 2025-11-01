@@ -1,0 +1,155 @@
+@page "/leaderboard/{quizId:int}"
+@inject NavigationManager Navigation
+
+<PageTitle>Leaderboard Details</PageTitle>
+
+<style>
+body, html {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+}
+
+/* NAVBAR */
+.navbar {
+    background-color: #61c2a2;
+    padding: 10px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+}
+
+.profile-icon {
+    background-color: #fff;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.nav-links a {
+    margin-left: 25px;
+    text-decoration: none;
+    color: #000;
+    font-weight: 500;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+}
+
+/* MAIN CONTENT */
+.details-container {
+    padding: 40px;
+}
+
+.student-card {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.student-card:hover {
+    transform: translateY(-3px);
+    transition: 0.2s;
+}
+
+.search-sort {
+    margin-bottom: 20px;
+}
+</style>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <div class="profile-icon">👤</div>
+        <span style="color: white; font-weight: 600;">Profile</span>
+    </div>
+
+    <div class="nav-links">
+        <a href="/teacherdashboard">Dashboard</a>
+        <a href="/view-quizzes">View Quizzes</a>
+        <a href="/leaderboard" style="font-weight: bold;">View Leaderboard</a>
+        <a href="/createquiz">Create A Quiz</a>
+        <a href="/" class="logout">Log out</a>
+    </div>
+</div>
+
+<div class="details-container">
+    <h3>🏆 Leaderboard for Quiz @quizId</h3>
+
+    <div class="search-sort">
+        <input type="text" @bind="searchTerm" @bind:event="oninput" placeholder="Search by student name..." class="form-control" style="width: 300px;" />
+        <div class="mt-2">
+            <button class="btn btn-secondary me-2" @onclick="SortAscending">⬆ Lowest Scores First</button>
+            <button class="btn btn-success" @onclick="SortDescending">⬇ Highest Scores First</button>
+        </div>
+    </div>
+
+    @if (filteredStudents.Any())
+    {
+        @foreach (var (student, index) in filteredStudents.Select((s, i) => (s, i)))
+        {
+            <div class="student-card">
+                <strong>Rank: @(index + 1)</strong><br />
+                <span><b>Name:</b> @student.Name</span><br />
+                <span><b>Score:</b> @student.Score</span>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-warning">No students found.</div>
+    }
+
+    <button class="btn btn-secondary mt-4" @onclick="GoBack">⬅ Back to Leaderboards</button>
+</div>
+
+@code {
+    [Parameter] public int quizId { get; set; }
+
+    private List<Student> students = new();
+    private string searchTerm = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        students = new List<Student>
+        {
+            new Student { Name = "Mark Alaba", Score = 90 },
+            new Student { Name = "Ashlie Ballera", Score = 91 },
+            new Student { Name = "Karl Basconcillo", Score = 92 },
+            new Student { Name = "Gwen Lopez", Score = 100 },
+            new Student { Name = "Matthew Nunez", Score = 93 },
+            new Student { Name = "Laufey", Score = 98 },
+            new Student { Name = "Melanie Martinez", Score = 96 },
+            new Student { Name = "Marjon Umbay", Score = 80 },
+        };
+    }
+
+    private List<Student> filteredStudents =>
+        students
+            .Where(s => string.IsNullOrEmpty(searchTerm) || s.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+    private void SortAscending() => students = students.OrderBy(s => s.Score).ToList();
+    private void SortDescending() => students = students.OrderByDescending(s => s.Score).ToList();
+    private void GoBack() => Navigation.NavigateTo("/leaderboard");
+
+    public class Student
+    {
+        public string Name { get; set; } = string.Empty;
+        public int Score { get; set; }
+    }
+}

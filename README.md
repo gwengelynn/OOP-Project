@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🧠 OOP-Project — SmartQuiz
 
 **SmartQuiz** is a system quiz application designed to make creating, managing, and taking quizzes easier and more efficient for both teachers and students.  
@@ -30,3 +31,5 @@ SmartQuiz follows Object-Oriented Programming (OOP) principles — *encapsulatio
 Our target users are **high school to college students and teachers**. We also designed the **UI based on colors and styles suited for this age group**, making the interface pleasing and engaging.
 
 
+=======
+>>>>>>> 54043c9 (jjj)

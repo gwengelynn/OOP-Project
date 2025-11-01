@@ -1,0 +1,159 @@
+@page "/quiz/{id:int}"
+@inject NavigationManager Navigation
+@using System.Collections.Generic
+@rendermode InteractiveServer
+
+<PageTitle>Quiz Details</PageTitle>
+
+<style>
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9f9f9;
+}
+
+/* NAVBAR */
+.navbar {
+    background-color: #61c2a2;
+    padding: 10px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+}
+
+.profile-icon {
+    background-color: #fff;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.nav-links a {
+    margin-left: 25px;
+    text-decoration: none;
+    color: #000;
+    font-weight: 500;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+}
+
+.logout {
+    color: #000;
+    font-weight: 600;
+}
+
+/* MAIN SECTION */
+.quiz-details-container {
+    max-width: 800px;
+    margin: 50px auto;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+}
+
+.quiz-details-container h3 {
+    color: #333;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.quiz-details-container p {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+/* BUTTONS */
+.back-btn {
+    background-color: #61c2a2;
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.back-btn:hover {
+    opacity: 0.9;
+}
+</style>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <div class="profile-icon">👤</div>
+        <span style="color: white; font-weight: 600;">Profile</span>
+    </div>
+
+    <div class="nav-links">
+        <a href="/teacherdashboard">Dashboard</a>
+        <a href="/view-quizzes" style="font-weight: bold;">View Quizzes</a>
+        <a href="/leaderboard">View Leaderboard</a>
+        <a href="/createquiz">Create A Quiz</a>
+        <a href="/" class="logout">Log out</a>
+    </div>
+</div>
+
+<!-- QUIZ DETAILS CONTENT -->
+<div class="quiz-details-container">
+    @if (quiz == null)
+    {
+        <p>Loading quiz...</p>
+    }
+    else
+    {
+        <div>
+            <h3>🧠 @quiz.Title</h3>
+            <p>@quiz.Description</p>
+
+            <button class="back-btn" @onclick="GoBack">⬅ Back to Quizzes</button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private Quiz? quiz;
+
+    protected override void OnInitialized()
+    {
+        var allQuizzes = new List<Quiz>
+        {
+            new Quiz { Id = 1, Title = "Quiz template #1", Description = "This quiz tests basic programming logic and conditions." },
+            new Quiz { Id = 2, Title = "Quiz template #2", Description = "A quiz focusing on data types and variables." },
+            new Quiz { Id = 3, Title = "Quiz template #3", Description = "Covers loop structures and iteration logic." },
+            new Quiz { Id = 4, Title = "Quiz template #4", Description = "Basic syntax and code output questions." },
+            new Quiz { Id = 5, Title = "Quiz template #5", Description = "Advanced topics: functions and recursion." },
+        };
+
+        quiz = allQuizzes.FirstOrDefault(q => q.Id == id);
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/view-quizzes");
+    }
+
+    public class Quiz
+    {
+        public int Id { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+    }
+}

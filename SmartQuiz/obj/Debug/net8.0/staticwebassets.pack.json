@@ -1,0 +1,61 @@
+{
+  "Files": [
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/obj/Debug/net8.0/scopedcss/projectbundle/SmartQuiz.bundle.scp.css",
+      "PackagePath": "staticwebassets/SmartQuiz.bundle.scp.css"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/app.css",
+      "PackagePath": "staticwebassets/app.css"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/forhomepage.png",
+      "PackagePath": "staticwebassets/images/forhomepage.png"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/member1.jpg",
+      "PackagePath": "staticwebassets/images/member1.jpg"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/member2.jpg",
+      "PackagePath": "staticwebassets/images/member2.jpg"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/member3.jpg",
+      "PackagePath": "staticwebassets/images/member3.jpg"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/member4.jpg",
+      "PackagePath": "staticwebassets/images/member4.jpg"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/professor.png",
+      "PackagePath": "staticwebassets/images/professor.png"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/smartquiz-logo.png",
+      "PackagePath": "staticwebassets/images/smartquiz-logo.png"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/student-writing.png",
+      "PackagePath": "staticwebassets/images/student-writing.png"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.SmartQuiz.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.SmartQuiz.props",
+      "PackagePath": "build\\SmartQuiz.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.SmartQuiz.props",
+      "PackagePath": "buildMultiTargeting\\SmartQuiz.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.SmartQuiz.props",
+      "PackagePath": "buildTransitive\\SmartQuiz.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

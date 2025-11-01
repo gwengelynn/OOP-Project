@@ -1,0 +1,154 @@
+@page "/quizbuilder/{quizId:int}"
+@using SmartQuiz.Services
+@inject NavigationManager Navigation
+@inject QuizService QuizService
+@rendermode InteractiveServer
+
+<h2 style="font-family:'Poppins';color:#333;">📝 Quiz Builder</h2>
+
+<div style="max-width: 800px; margin: 20px auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <input type="text" @bind="quizTitle" placeholder="Untitled Quiz" 
+           style="width:100%;font-size:24px;padding:10px;border:none;border-bottom:2px solid #ddd;margin-bottom:15px;outline:none;" />
+    <textarea @bind="quizDescription" placeholder="Quiz description..." 
+              style="width:100%;height:60px;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:20px;"></textarea>
+
+    <h3>Questions</h3>
+
+    @foreach (var q in questions)
+    {
+        <div style="border:1px solid #ddd;padding:15px;border-radius:10px;margin-bottom:15px;">
+            <input type="text" @bind="q.QuestionText" placeholder="Enter question" 
+                   style="width:100%;padding:8px;border:none;border-bottom:1px solid #ccc;margin-bottom:10px;" />
+
+            <select @bind="q.Type" style="padding:8px;margin-bottom:10px;">
+                <option>Multiple Choice</option>
+                <option>Identification</option>
+                <option>True or False</option>
+            </select>
+
+            @if (q.Type == "Multiple Choice")
+            {
+                @for (int i = 0; i < q.Options.Count; i++)
+                {
+                    int index = i;
+                    <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
+                        <input type="radio" name="@($"correct_{q.Id}")" value="@index" 
+                               @onchange="@(() => SetCorrectAnswer(q, index))" 
+                               checked="@(q.CorrectAnswerIndex == index)" />
+                        <span style="min-width:20px;font-weight:bold;">@(char.ConvertFromUtf32(65 + index))</span>
+                        <input type="text" @bind="q.Options[index]" placeholder="Option" 
+                               style="flex:1;padding:6px;border:1px solid #ccc;border-radius:5px;" />
+                    </div>
+                }
+                <button @onclick="() => AddOption(q)" style="margin-top:5px;" 
+                        disabled="@(q.Options.Count >= 4)">+ Add Option</button>
+                @if (q.Options.Count > 2)
+                {
+                    <button @onclick="() => RemoveOption(q)" style="margin-top:5px;margin-left:5px;">- Remove Option</button>
+                }
+            }
+            else if (q.Type == "True or False")
+            {
+                <div>
+                    <label style="display:flex;align-items:center;gap:5px;margin-bottom:5px;">
+                        <input type="radio" name="@($"correct_{q.Id}")" value="true" @onchange="@(() => SetCorrectAnswer(q, "true"))" 
+                               checked="@(q.CorrectAnswer == "true")" />
+                        True
+                    </label>
+                    <label style="display:flex;align-items:center;gap:5px;">
+                        <input type="radio" name="@($"correct_{q.Id}")" value="false" @onchange="@(() => SetCorrectAnswer(q, "false"))" 
+                               checked="@(q.CorrectAnswer == "false")" />
+                        False
+                    </label>
+                </div>
+            }
+            else if (q.Type == "Identification")
+            {
+                <div style="margin-bottom:10px;">
+                    <label style="font-weight:bold;display:block;margin-bottom:5px;">Correct Answers (comma-separated):</label>
+                    <input type="text" @bind="q.CorrectAnswer" placeholder="Enter correct answers separated by commas" 
+                           style="width:100%;padding:6px;border:1px solid #ccc;border-radius:5px;" />
+                    <small style="color:#666;font-size:12px;">Example: "UML", "Unified Modelling Language", "Unified Modeling Language"</small>
+                </div>
+            }
+
+            <button @onclick="() => RemoveQuestion(q)" style="margin-top:10px;color:#fff;background:#d9534f;padding:6px 12px;border:none;border-radius:6px;">Delete</button>
+        </div>
+    }
+
+    <button @onclick="AddQuestion" 
+            style="background:#61c2a2;color:white;padding:10px 20px;border:none;border-radius:6px;margin-top:10px;">
+        + Add Question
+    </button>
+
+    <button @onclick="SaveQuiz" 
+            style="background:#48a583;color:white;padding:10px 20px;border:none;border-radius:6px;margin-top:10px;margin-left:10px;">
+        ✅ Save Quiz
+    </button>
+</div>
+
+@code {
+    [Parameter] public int quizId { get; set; }
+
+    private string quizTitle = "";
+    private string quizDescription = "";
+    private List<Question> questions = new();
+
+    protected override void OnInitialized()
+    {
+        // Load existing quiz or create new one
+        var existingQuiz = QuizService.GetQuizById(quizId);
+        quizTitle = existingQuiz?.Title ?? $"New Quiz #{quizId}";
+        quizDescription = existingQuiz?.Description ?? "";
+        questions = existingQuiz?.Questions?.ToList() ?? new();
+    }
+
+    private void AddQuestion()
+    {
+        var newQuestion = new Question
+        {
+            Id = questions.Count + 1,
+            Type = "Multiple Choice",
+            Options = new List<string> { "", "" },
+            CorrectAnswerIndex = -1,
+            CorrectAnswer = ""
+        };
+        questions.Add(newQuestion);
+    }
+
+    private void AddOption(Question q)
+    {
+        if (q.Options.Count < 4)
+            q.Options.Add("");
+    }
+
+    private void RemoveOption(Question q)
+    {
+        if (q.Options.Count > 2)
+        {
+            q.Options.RemoveAt(q.Options.Count - 1);
+            if (q.CorrectAnswerIndex >= q.Options.Count)
+                q.CorrectAnswerIndex = -1;
+        }
+    }
+
+    private void RemoveQuestion(Question q) => questions.Remove(q);
+
+    private void SetCorrectAnswer(Question q, int index) => q.CorrectAnswerIndex = index;
+    private void SetCorrectAnswer(Question q, string answer) => q.CorrectAnswer = answer;
+
+    private void SaveQuiz()
+    {
+        var quiz = new Quiz
+        {
+            Id = quizId,
+            Title = string.IsNullOrWhiteSpace(quizTitle) ? "Untitled Quiz" : quizTitle,
+            Description = quizDescription,
+            Questions = questions.ToList()
+        };
+
+        QuizService.UpdateQuiz(quiz);
+        Console.WriteLine($"💾 Saved: {quiz.Title} ({quiz.Questions.Count} questions)");
+        Navigation.NavigateTo("/createquiz");
+    }
+}

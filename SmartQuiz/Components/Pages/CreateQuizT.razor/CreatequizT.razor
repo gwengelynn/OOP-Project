@@ -1,0 +1,190 @@
+@page "/createquiz"
+@inject NavigationManager Navigation
+@inject SmartQuiz.Services.QuizService QuizService
+@rendermode InteractiveServer
+
+<style>
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9f9f9;
+}
+
+.navbar {
+    background-color: #61c2a2;
+    padding: 10px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+}
+
+.profile-icon {
+    background-color: #fff;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.nav-links a {
+    margin-left: 25px;
+    text-decoration: none;
+    color: #000;
+    font-weight: 500;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+}
+
+.main-content {
+    display: flex;
+    height: calc(100vh - 60px);
+    padding: 40px;
+}
+
+.left-panel {
+    flex: 0.7;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.quiz-card {
+    background-color: #e8e8e8;
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.quiz-card h3 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.quiz-card p {
+    font-size: 0.9rem;
+    color: #444;
+    line-height: 1.3;
+    margin-bottom: 10px;
+}
+
+.quiz-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.quiz-buttons button {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.create-btn {
+    background-color: #61c2a2;
+    color: #fff;
+}
+
+.publish-btn {
+    background-color: #48a583;
+    color: #fff;
+}
+
+.create-btn:hover, .publish-btn:hover {
+    opacity: 0.9;
+}
+
+.right-panel {
+    flex: 1.3;
+    padding-left: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.right-panel h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+}
+</style>
+
+<div class="navbar">
+    <div class="nav-left">
+        <div class="profile-icon">👤</div>
+        <span style="color: white; font-weight: 600;">Profile</span>
+    </div>
+
+    <div class="nav-links">
+        <a href="/teacherdashboard">Dashboard</a>
+        <a href="/view-quizzes">View Quizzes</a>
+        <a href="/leaderboard">View Leaderboard</a>
+        <a href="/createquiz" style="font-weight: bold;">Create A Quiz</a>
+        <a href="/" class="logout">Log out</a>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="left-panel">
+        <h3 style="margin-bottom: 5px;">Create a quiz:</h3>
+
+        @foreach (var quiz in QuizService.Quizzes)
+        {
+            <div class="quiz-card">
+                <h3>@quiz.Title</h3>
+                <p>@quiz.Description</p>
+                <div class="quiz-buttons">
+                    <button class="create-btn" @onclick="() => EditQuiz(quiz.Id)">Edit</button>
+                    <button class="publish-btn" @onclick="() => PublishQuiz(quiz.Id)">Publish</button>
+                </div>
+            </div>
+        }
+
+        <button class="create-btn" style="width: fit-content; margin-top: 15px;" @onclick="CreateBlankQuiz">
+            + Create New Quiz
+        </button>
+    </div>
+
+    <div class="right-panel">
+        <h1>Start creating your<br />quizzes</h1>
+        <p>
+            Create and customize your quiz — organize, refine, and make learning easy for your students starting here.
+        </p>
+    </div>
+</div>
+
+@code {
+    private void CreateBlankQuiz()
+    {
+        var newQuiz = new SmartQuiz.Services.Quiz
+        {
+            Id = QuizService.Quizzes.Count + 1,
+            Title = $"New Quiz #{QuizService.Quizzes.Count + 1}",
+            Description = "Untitled quiz..."
+        };
+        QuizService.AddQuiz(newQuiz);
+        Navigation.NavigateTo($"/quizbuilder/{newQuiz.Id}");
+    }
+
+    private void EditQuiz(int id)
+    {
+        Navigation.NavigateTo($"/quizbuilder/{id}");
+    }
+
+    private void PublishQuiz(int id)
+    {
+        Console.WriteLine($"Quiz {id} published!");
+    }
+}

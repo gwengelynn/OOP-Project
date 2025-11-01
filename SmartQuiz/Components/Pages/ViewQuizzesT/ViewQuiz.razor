@@ -1,0 +1,220 @@
+@page "/view-quizzes"
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>View Quizzes</PageTitle>
+
+<style>
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9f9f9;
+}
+
+/* NAVBAR */
+.navbar {
+    background-color: #61c2a2;
+    padding: 10px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+}
+
+.profile-icon {
+    background-color: #fff;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.nav-links a {
+    margin-left: 25px;
+    text-decoration: none;
+    color: #000;
+    font-weight: 500;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+}
+
+.logout {
+    color: #000;
+    font-weight: 600;
+}
+
+/* MAIN CONTENT */
+.view-quizzes-container {
+    padding: 40px;
+}
+
+.view-quizzes-container h3 {
+    margin-bottom: 25px;
+    font-weight: 700;
+}
+
+/* QUIZ GRID */
+.quiz-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* QUIZ CARD */
+.quiz-card {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+.quiz-card:hover {
+    transform: translateY(-4px);
+}
+
+.quiz-card h5 {
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.quiz-card p {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.3;
+}
+
+/* BUTTONS */
+.button-group {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.button-group button {
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.btn-secondary {
+    background-color: #61c2a2;
+}
+
+.btn-danger {
+    background-color: #d9534f;
+}
+
+.btn-success {
+    background-color: #5cb85c;
+}
+
+.button-group button:hover {
+    opacity: 0.85;
+}
+
+/* FOOTER TEXT INSIDE CARD */
+.quiz-footer {
+    margin-top: 12px;
+    font-size: 0.8rem;
+    color: #777;
+    display: flex;
+    justify-content: space-between;
+}
+</style>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <div class="profile-icon">👤</div>
+        <span style="color: white; font-weight: 600;">Profile</span>
+    </div>
+
+    <div class="nav-links">
+        <a href="/teacherdashboard">Dashboard</a>
+        <a href="/view-quizzes" style="font-weight: bold;">View Quizzes</a>
+        <a href="/leaderboard">View Leaderboard</a>
+        <a href="/createquiz">Create A Quiz</a>
+        <a href="/" class="logout">Log out</a>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="view-quizzes-container">
+    <h3>Quizzes you created:</h3>
+
+    @if (quizzes.Count == 0)
+    {
+        <p>No quizzes found. Create your first quiz <a href="/createquiz">here</a>.</p>
+    }
+    else
+    {
+        <div class="quiz-grid">
+            @foreach (var quiz in quizzes)
+            {
+                <div class="quiz-card">
+                    <h5>@quiz.Title</h5>
+                    <p>@quiz.Description</p>
+
+                    <div class="button-group">
+                        <button class="btn-secondary" @onclick="() => EditQuiz(quiz.Id)">Edit</button>
+                        <button class="btn-danger" @onclick="() => DeleteQuiz(quiz.Id)">Delete</button>
+                        <button class="btn-success" @onclick="() => OpenQuiz(quiz.Id)">Open Quiz</button>
+                    </div>
+
+                    <div class="quiz-footer">
+                        <span>View quiz takers</span>
+                        <span>#Number of items</span>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Quiz> quizzes = new();
+
+    protected override void OnInitialized()
+    {
+        // Start with an empty list — can later fetch from QuizService
+        quizzes = new List<Quiz>();
+    }
+
+    private void EditQuiz(int id)
+    {
+        Console.WriteLine($"Edit quiz {id}");
+    }
+
+    private void DeleteQuiz(int id)
+    {
+        Console.WriteLine($"Delete quiz {id}");
+    }
+
+    private void OpenQuiz(int id)
+    {
+        Navigation.NavigateTo($"/quiz/{id}");
+    }
+
+    public class Quiz
+    {
+        public int Id { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+    }
+}

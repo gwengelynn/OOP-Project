@@ -1,0 +1,164 @@
+
+@page "/teacherdashboard"
+@inject NavigationManager Navigation
+
+
+<style>
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9f9f9;
+}
+
+
+/* NAVBAR */
+.navbar {
+    background-color: #61c2a2;
+    padding: 10px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+
+.nav-left {
+    display: flex;
+    align-items: center;
+}
+
+
+.profile-icon {
+    background-color: #fff;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+
+.nav-links a {
+    margin-left: 25px;
+    text-decoration: none;
+    color: #000;
+    font-weight: 500;
+}
+
+
+.nav-links a:hover {
+    text-decoration: underline;
+}
+
+
+.logout {
+    color: #000;
+    font-weight: 600;
+}
+
+
+/* MAIN LAYOUT */
+.main-content {
+    padding: 40px;
+    height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* Dashboard Layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+
+.card {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+
+
+.card h3 {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #333;
+}
+
+
+/* Big Card */
+.big-card {
+    grid-column: 1 / -1;
+    min-height: 280px;
+}
+</style>
+
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <div class="profile-icon">👤</div>
+        <span style="color: white; font-weight: 600;">Profile</span>
+    </div>
+
+
+    <div class="nav-links">
+        <a href="/teacherdashboard" style="font-weight:bold;">Dashboard</a>
+        <a href="/view-quizzes">View Quizzes</a>
+        <a href="/leaderboard">View Leaderboard</a>
+        <a href="/createquiz">Create A Quiz</a>
+        <a href="/" class="logout">Log out</a>
+    </div>
+</div>
+
+
+<!-- MAIN DASHBOARD -->
+<div class="main-content">
+    <h1 style="font-weight:800; font-size:2rem; margin-bottom:10px;">Dashboard</h1>
+    <p style="color:#555;">Monitor your students’ progress and quiz performance.</p>
+
+
+    <div class="dashboard-grid">
+        <!-- AVERAGE SCORES -->
+        <div class="card" @onclick="@(() => Navigation.NavigateTo("/viewquizzes"))">
+            <h3>Average Scores</h3>
+        </div>
+
+
+        <!-- STUDENTS' LEADERBOARD -->
+        <div class="card" @onclick="@(() => Navigation.NavigateTo("/leaderboard"))">
+            <h3>Students' Leaderboard</h3>
+        </div>
+
+
+        <!-- QUIZ COMPLETION -->
+        <div class="card" @onclick="@(() => Navigation.NavigateTo("/viewquizzes"))">
+            <h3>Quiz Completion</h3>
+        </div>
+
+
+        <!-- OVERALL QUIZ PERFORMANCE -->
+        <div class="card big-card">
+            <h3>Overall Quiz Performance</h3>
+        </div>
+    </div>
+</div>
