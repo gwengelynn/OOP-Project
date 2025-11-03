@@ -8,15 +8,20 @@ body, html {
     margin: 0;
     padding: 0;
     font-family: 'Poppins', sans-serif;
-    background-color: #f9f9f9;
+    background: #61c2a2;
+    min-height: 100vh;
 }
 
+/* NAVBAR */
 .navbar {
-    background-color: #61c2a2;
-    padding: 10px 40px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 15px 40px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
 }
 
 .nav-left {
@@ -25,34 +30,55 @@ body, html {
 }
 
 .profile-icon {
-    background-color: #fff;
+    background: linear-gradient(135deg, #61c2a2, #48a583);
     border-radius: 50%;
-    width: 35px;
-    height: 35px;
-    margin-right: 10px;
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
+    color: white;
+    box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
 }
 
 .nav-links a {
-    margin-left: 25px;
+    margin-left: 30px;
     text-decoration: none;
-    color: #000;
+    color: #333;
     font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    position: relative;
 }
 
 .nav-links a:hover {
-    text-decoration: underline;
+    background: linear-gradient(135deg, #61c2a2, #48a583);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
 }
 
+.logout {
+    color: #e74c3c !important;
+    font-weight: 600;
+}
+
+.logout:hover {
+    background: #e74c3c !important;
+    color: white !important;
+}
+
+/* MAIN LAYOUT */
 .main-content {
     display: flex;
-    height: calc(100vh - 60px);
-    padding: 40px;
+    min-height: calc(100vh - 90px);
+    padding: 50px 40px;
 }
 
+/* LEFT SIDE: QUIZ CARDS */
 .left-panel {
     flex: 0.7;
     display: flex;
@@ -60,52 +86,99 @@ body, html {
     gap: 25px;
 }
 
-.quiz-card {
-    background-color: #e8e8e8;
-    padding: 16px;
-    border-radius: 8px;
-}
-
-.quiz-card h3 {
-    font-size: 1rem;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
-
-.quiz-card p {
-    font-size: 0.9rem;
-    color: #444;
-    line-height: 1.3;
+.left-panel h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
     margin-bottom: 10px;
 }
 
+.quiz-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.2);
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.quiz-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #61c2a2, #48a583, #667eea);
+    border-radius: 20px 20px 0 0;
+}
+
+.quiz-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.quiz-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+    font-weight: 700;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quiz-card h3::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(135deg, #61c2a2, #48a583);
+    border-radius: 2px;
+}
+
+.quiz-card p {
+    font-size: 0.95rem;
+    color: #7f8c8d;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+/* Buttons inside quiz card */
 .quiz-buttons {
     display: flex;
-    gap: 8px;
+    gap: 10px;
 }
 
 .quiz-buttons button {
-    padding: 6px 14px;
+    padding: 10px 20px;
     border: none;
-    border-radius: 4px;
-    font-weight: 500;
+    border-radius: 12px;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
 }
 
 .create-btn {
-    background-color: #61c2a2;
+    background: linear-gradient(135deg, #61c2a2, #48a583);
     color: #fff;
 }
 
 .publish-btn {
-    background-color: #48a583;
+    background: linear-gradient(135deg, #48a583, #61c2a2);
     color: #fff;
 }
 
 .create-btn:hover, .publish-btn:hover {
-    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(97, 194, 162, 0.4);
 }
 
+/* RIGHT SIDE */
 .right-panel {
     flex: 1.3;
     padding-left: 50px;
@@ -118,27 +191,87 @@ body, html {
     font-size: 3rem;
     font-weight: 800;
     margin-bottom: 20px;
+    color: white;
 }
+
+.right-panel p {
+    color: rgba(255,255,255,0.9);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    width: 90%;
+    font-weight: 300;
+}
+
+
+/* Responsive Design */
+@@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+        padding: 30px 20px;
+    }
+    
+    .navbar {
+        padding: 10px 20px;
+    }
+    
+    .nav-links a {
+        margin-left: 15px;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+    
+    .right-panel {
+        padding-left: 0;
+        margin-top: 30px;
+    }
+    
+    .right-panel h1 {
+        font-size: 2.2rem;
+    }
+    
+    .left-panel {
+        flex: 1;
+    }
+}
+
+/* Animation */
+@@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.quiz-card:nth-child(1) { animation-delay: 0.1s; }
+.quiz-card:nth-child(2) { animation-delay: 0.2s; }
+.quiz-card:nth-child(3) { animation-delay: 0.3s; }
+.quiz-card:nth-child(4) { animation-delay: 0.4s; }
 </style>
 
+<!-- NAVBAR -->
 <div class="navbar">
     <div class="nav-left">
         <div class="profile-icon">👤</div>
-        <span style="color: white; font-weight: 600;">Profile</span>
+        <span style="color: #2c3e50; font-weight: 600; font-size: 1.1rem;">Teacher Profile</span>
     </div>
 
     <div class="nav-links">
         <a href="/teacherdashboard">Dashboard</a>
         <a href="/view-quizzes">View Quizzes</a>
         <a href="/leaderboard">View Leaderboard</a>
-        <a href="/createquiz" style="font-weight: bold;">Create A Quiz</a>
+        <a href="/createquiz" style="font-weight:bold; background: linear-gradient(135deg, #61c2a2, #48a583); color: white;">Create A Quiz</a>
         <a href="/" class="logout">Log out</a>
     </div>
 </div>
 
+<!-- MAIN CONTENT -->
 <div class="main-content">
     <div class="left-panel">
-        <h3 style="margin-bottom: 5px;">Create a quiz:</h3>
+        <h2 style="margin-bottom: 5px;">Create a quiz:</h2>
 
         @foreach (var quiz in QuizService.Quizzes)
         {
@@ -157,6 +290,7 @@ body, html {
         </button>
     </div>
 
+    <!-- RIGHT SIDE -->
     <div class="right-panel">
         <h1>Start creating your<br />quizzes</h1>
         <p>

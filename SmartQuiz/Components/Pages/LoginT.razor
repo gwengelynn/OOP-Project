@@ -1,5 +1,8 @@
 @page "/logint"
 @inject NavigationManager Navigation
+@inject SmartQuiz.Data.AppDbContext _context
+@using SmartQuiz.Models
+@using Microsoft.EntityFrameworkCore
 @rendermode InteractiveServer
 
 <style>
@@ -46,7 +49,7 @@ html, body {
 }
 
 .illustration img {
-    width: 800%;
+    width: 100%;
     max-width: 800px;
     height: auto;
 }
@@ -164,6 +167,7 @@ nav a:hover {
     color: #4daf8f;
     text-decoration: none;
     font-weight: 500;
+    cursor: pointer;
 }
 
 .forgot-password:hover {
@@ -194,6 +198,14 @@ nav a:hover {
 /* Error message styling */
 .error-message {
     color: red;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.success-message {
+    color: green;
     font-size: 0.9rem;
     margin-top: 5px;
     margin-bottom: 10px;
@@ -234,7 +246,7 @@ nav a:hover {
 
             <label>Username or Email</label>
             <div class="input-wrapper">
-                <input type="text" placeholder="Enter Username or Email" @bind="username" />
+                <input type="text" placeholder="Enter Username or Email" @bind="usernameOrEmail" />
             </div>
 
             <label>Password</label>
@@ -248,6 +260,11 @@ nav a:hover {
             @if (!string.IsNullOrEmpty(errorMessage))
             {
                 <div class="error-message">@errorMessage</div>
+            }
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="success-message">@successMessage</div>
             }
 
             <button class="login-btn" @onclick="HandleLogin">Log In</button>
@@ -267,37 +284,65 @@ nav a:hover {
 </div>
 
 @code {
-    private string username = string.Empty;
+    private string usernameOrEmail = string.Empty;
     private string password = string.Empty;
     private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
     private bool showPassword = false;
 
     private string PasswordInputType => showPassword ? "text" : "password";
+
     private void TogglePasswordVisibility() => showPassword = !showPassword;
 
-    private void HandleLogin()
+    private async Task HandleLogin()
     {
         errorMessage = string.Empty;
+        successMessage = string.Empty;
 
-        // Validation
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        // Validate input
+        if (string.IsNullOrWhiteSpace(usernameOrEmail) || string.IsNullOrWhiteSpace(password))
         {
             errorMessage = "Please fill in all fields.";
             return;
         }
 
-        // Example simple login check — replace with actual logic
-        if (username != "teacher@example.com" || password != "12345")
+        try
         {
-            errorMessage = "Incorrect email or password.";
-            return;
-        }
+            // Try to find teacher by email or username (must be a Teacher role)
+            var teacher = await _context.Users
+                .FirstOrDefaultAsync(u => 
+                    (u.Email == usernameOrEmail || u.Name == usernameOrEmail) 
+                    && u.Role == "Teacher");
 
-        // If login is successful
-        Navigation.NavigateTo("/teacherdashboard", true);
+            if (teacher == null)
+            {
+                errorMessage = "Incorrect email/username or password, or you are not registered as a teacher.";
+                return;
+            }
+
+            // Verify password
+            if (teacher.Password != password)
+            {
+                errorMessage = "Incorrect email/username or password.";
+                return;
+            }
+
+            // Login successful
+            successMessage = "Login successful! Redirecting...";
+            await Task.Delay(1000);
+            
+            // Navigate to teacher dashboard
+            Navigation.NavigateTo("/teacherdashboard", true);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred during login: {ex.Message}";
+            Console.WriteLine($"Login Error: {ex}");
+        }
     }
 
     private void GoToSignup() => Navigation.NavigateTo("/signupt", true);
     private void GoToForgotPassword() => Navigation.NavigateTo("/forgotpasswordt", true);
     private void GoToHome() => Navigation.NavigateTo("/", true);
 }
+

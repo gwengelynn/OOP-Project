@@ -1,5 +1,8 @@
 @page "/login"
 @inject NavigationManager Navigation
+@inject SmartQuiz.Data.AppDbContext _context
+@using SmartQuiz.Models
+@using Microsoft.EntityFrameworkCore
 @rendermode InteractiveServer
 
 <style>
@@ -46,7 +49,7 @@ html, body {
 }
 
 .illustration img {
-    width: 800%;
+    width: 100%;
     max-width: 800px;
     height: auto;
 }
@@ -164,6 +167,7 @@ nav a:hover {
     color: #4daf8f;
     text-decoration: none;
     font-weight: 500;
+    cursor: pointer;
 }
 
 .forgot-password:hover {
@@ -194,6 +198,14 @@ nav a:hover {
 /* Error message styling */
 .error-message {
     color: red;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.success-message {
+    color: green;
     font-size: 0.9rem;
     margin-top: 5px;
     margin-bottom: 10px;
@@ -234,7 +246,7 @@ nav a:hover {
 
             <label>Username or Email</label>
             <div class="input-wrapper">
-                <input type="text" placeholder="Enter Username or Email" @bind="username" />
+                <input type="text" placeholder="Enter Username or Email" @bind="usernameOrEmail" />
             </div>
 
             <label>Password</label>
@@ -250,12 +262,17 @@ nav a:hover {
                 <div class="error-message">@errorMessage</div>
             }
 
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="success-message">@successMessage</div>
+            }
+
             <button class="login-btn" @onclick="HandleLogin">Log In</button>
 
             <a class="forgot-password" @onclick="GoToForgotPassword">Forgot Password?</a>
 
             <div class="signup-section">
-                <p>                        </p>
+                <p></p>
                 <p>Don't have an account?</p>
                 <button class="signup-btn" @onclick="GoToSignup">Sign Up</button>
             </div>
@@ -269,34 +286,61 @@ nav a:hover {
 
 
 @code {
-    private string username = string.Empty;
+    private string usernameOrEmail = string.Empty;
     private string password = string.Empty;
     private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
 
     private bool showPassword = false;
     private string PasswordInputType => showPassword ? "text" : "password";
 
     private void TogglePasswordVisibility() => showPassword = !showPassword;
 
-    private void HandleLogin()
+    private async Task HandleLogin()
     {
         errorMessage = string.Empty;
+        successMessage = string.Empty;
 
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        // Validate input
+        if (string.IsNullOrWhiteSpace(usernameOrEmail) || string.IsNullOrWhiteSpace(password))
         {
             errorMessage = "Please fill in all fields.";
             return;
         }
 
-        // Example simple validation — replace with real logic later
-        if (username != "student@example.com" || password != "12345")
+        try
         {
-            errorMessage = "Incorrect email or password.";
-            return;
-        }
+            // Try to find student by email or username (must be a Student role)
+            var student = await _context.Users
+                .FirstOrDefaultAsync(u => 
+                    (u.Email == usernameOrEmail || u.Name == usernameOrEmail) 
+                    && u.Role == "Student");
 
-        // If login is successful
-        Navigation.NavigateTo("/studentdashboard", true);
+            if (student == null)
+            {
+                errorMessage = "Incorrect email/username or password, or you are not registered as a student.";
+                return;
+            }
+
+            // Verify password
+            if (student.Password != password)
+            {
+                errorMessage = "Incorrect email/username or password.";
+                return;
+            }
+
+            // Login successful
+            successMessage = "Login successful! Redirecting...";
+            await Task.Delay(1000);
+            
+            // Navigate to student dashboard
+            Navigation.NavigateTo("/studentdashboard", true);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred during login: {ex.Message}";
+            Console.WriteLine($"Login Error: {ex}");
+        }
     }
 
     private void GoToSignup() => Navigation.NavigateTo("/signup", true);

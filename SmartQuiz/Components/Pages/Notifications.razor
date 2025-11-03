@@ -1,0 +1,274 @@
+@page "/notifications"
+@page "/studentsnotifications"
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<style>
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #61c2a2;
+    min-height: 100vh;
+}
+
+/* NAVBAR */
+.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 15px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+}
+
+.profile-icon {
+    background: linear-gradient(135deg, #61c2a2, #48a583);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
+}
+
+.nav-links a {
+    margin-left: 30px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-links a:hover {
+    background: linear-gradient(135deg, #61c2a2, #48a583);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
+}
+
+.logout {
+    color: #e74c3c !important;
+    font-weight: 600;
+}
+
+.logout:hover {
+    background: #e74c3c !important;
+    color: white !important;
+}
+
+/* MAIN LAYOUT */
+.main-content {
+    padding: 50px 40px;
+    min-height: calc(100vh - 90px);
+}
+
+.main-content h2 {
+    font-weight: 800;
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    color: white;
+}
+
+/* Notification Section */
+.notifications-container {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.notification-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.notification-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #61c2a2, #48a583, #667eea);
+    border-radius: 20px 20px 0 0;
+}
+
+.notification-card:hover {
+    transform: translateY(-5px) scale(1.01);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.notification-header {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: #2c3e50;
+}
+
+.notification-subject {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, rgba(97, 194, 162, 0.1), rgba(72, 165, 131, 0.1));
+    padding: 15px 20px;
+    border-radius: 12px;
+    border-left: 4px solid #61c2a2;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.notification-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #2c3e50;
+    flex: 1;
+    min-width: 200px;
+}
+
+.quiz-btn {
+    background: linear-gradient(135deg, #61c2a2, #48a583);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
+    white-space: nowrap;
+}
+
+.quiz-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(97, 194, 162, 0.4);
+}
+
+.time-published {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    white-space: nowrap;
+}
+
+/* Responsive Design */
+@@media (max-width: 768px) {
+    .main-content {
+        padding: 30px 20px;
+    }
+    
+    .navbar {
+        padding: 10px 20px;
+    }
+    
+    .nav-links a {
+        margin-left: 15px;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+    
+    .main-content h2 {
+        font-size: 2rem;
+    }
+
+    .notification-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .notification-title {
+        min-width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+/* Animation */
+@@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notification-card:nth-child(1) { animation-delay: 0.1s; }
+.notification-card:nth-child(2) { animation-delay: 0.2s; }
+.notification-card:nth-child(3) { animation-delay: 0.3s; }
+.notification-card:nth-child(4) { animation-delay: 0.4s; }
+.notification-card:nth-child(5) { animation-delay: 0.5s; }
+</style>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="nav-left">
+        <div class="profile-icon">👤</div>
+        <span style="color: #2c3e50; font-weight: 600; font-size: 1.1rem;">Profile</span>
+    </div>
+
+    <div class="nav-links">
+        <a href="/studentdashboard">Dashboard</a>
+        <a href="/notifications" style="font-weight:bold; background: linear-gradient(135deg, #61c2a2, #48a583); color: white;">Notifications</a>
+        <a href="/view-quiz-history">View Quiz History</a>
+        <a href="/take-quiz">Take Quiz</a>
+        <a href="/" class="logout">Log out</a>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+    <h2>Notifications</h2>
+
+    <div class="notifications-container">
+        @for (int i = 0; i < 5; i++)
+        {
+            <div class="notification-card">
+                <div class="notification-header">Date: MM/DD, DAY</div>
+                <div class="notification-subject">SUBJECT</div>
+                <div class="notification-content">
+                    <span class="notification-title">QUIZ TOPIC #@(i + 1)</span>
+                    <div style="display:flex; align-items:center; gap:15px; flex-wrap: wrap;">
+                        <button class="quiz-btn" @onclick="@(() => Navigation.NavigateTo("/take-quiz"))">Go to quiz</button>
+                        <span class="time-published">Time published</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    // Add any data binding or logic here if needed
+}
+

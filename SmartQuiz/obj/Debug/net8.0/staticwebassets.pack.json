@@ -29,6 +29,14 @@
       "PackagePath": "staticwebassets/images/member4.jpg"
     },
     {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/member5.jpg",
+      "PackagePath": "staticwebassets/images/member5.jpg"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/member6.jpg",
+      "PackagePath": "staticwebassets/images/member6.jpg"
+    },
+    {
       "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/professor.png",
       "PackagePath": "staticwebassets/images/professor.png"
     },

@@ -1,5 +1,8 @@
 @page "/signupt"
 @inject NavigationManager Navigation
+@inject SmartQuiz.Data.AppDbContext _context
+@using SmartQuiz.Models
+@using Microsoft.EntityFrameworkCore
 @rendermode InteractiveServer
 
 <style>
@@ -17,7 +20,7 @@ html, body {
     background-color: #f9f9f9;
 }
 
-/* LEFT SIDE (green background with logo + student image) */
+/* LEFT SIDE (green background with logo + teacher image) */
 .left-panel {
     flex: 1;
     background-color: #61c2a2;
@@ -31,7 +34,7 @@ html, body {
 
 .logo {
     margin-left: 8px;
-    cursor: pointer; /* 👈 allows clicking the logo */
+    cursor: pointer;
 }
 
 .logo img {
@@ -47,7 +50,7 @@ html, body {
 }
 
 .illustration img {
-    width: 800%;
+    width: 100%;
     max-width: 800px;
     height: auto;
 }
@@ -203,7 +206,7 @@ nav a:hover {
             <img src="images/smartquiz-logo.png" alt="SmartQuiz Logo" />
         </div>
         <div class="illustration">
-            <img src="images/professor.png" alt="Student Illustration" />
+            <img src="images/professor.png" alt="Teacher Illustration" />
         </div>
     </div>
 
@@ -233,7 +236,7 @@ nav a:hover {
             @if (!string.IsNullOrEmpty(emailError))
             {
                 <div class="error-message">@emailError</div>
-            }⠀⠀⠀⠀
+            }
 
             <label>Password</label>
             <div class="input-wrapper">
@@ -266,6 +269,11 @@ nav a:hover {
                 <div class="success-message">@successMessage</div>
             }
 
+            @if (!string.IsNullOrEmpty(message) && string.IsNullOrEmpty(successMessage))
+            {
+                <div class="error-message" style="margin-top: 10px;">@message</div>
+            }
+
             <p>Already have an account?</p>
             <button class="login-btn" @onclick="BackToLogin">Log In</button>
         </div>
@@ -286,6 +294,7 @@ nav a:hover {
     private string passwordError = string.Empty;
     private string confirmPasswordError = string.Empty;
     private string successMessage = string.Empty;
+    private string message = string.Empty;
     private bool showPassword = false;
     private bool showConfirmPassword = false;
 
@@ -295,9 +304,17 @@ nav a:hover {
     private void TogglePasswordVisibility() => showPassword = !showPassword;
     private void ToggleConfirmPasswordVisibility() => showConfirmPassword = !showConfirmPassword;
 
-    private void ValidateAndSignUp()
+    private async Task ValidateAndSignUp()
     {
-        usernameError = emailError = passwordError = confirmPasswordError = successMessage = string.Empty;
+        // Clear previous errors
+        usernameError = "";
+        emailError = "";
+        passwordError = "";
+        confirmPasswordError = "";
+        successMessage = "";
+        message = "";
+
+        // Validation
         bool isValid = true;
 
         if (string.IsNullOrWhiteSpace(username))
@@ -328,17 +345,24 @@ nav a:hover {
             isValid = false;
         }
 
-        if (confirmPassword != password)
+        if (string.IsNullOrWhiteSpace(confirmPassword))
+        {
+            confirmPasswordError = "Please confirm your password.";
+            isValid = false;
+        }
+        else if (confirmPassword != password)
         {
             confirmPasswordError = "Passwords do not match.";
             isValid = false;
         }
 
-        if (isValid)
+        if (!isValid)
         {
-            successMessage = "Sign-up successful! You may now log in.";
-            Console.WriteLine("✅ Sign-up successful!");
+            return;
         }
+
+        // If validation passes, proceed with registration
+        await RegisterUser();
     }
 
     private bool IsValidEmail(string emailAddress)
@@ -354,6 +378,55 @@ nav a:hover {
         }
     }
 
+    private async Task RegisterUser()
+    {
+        try
+        {
+            // ✅ Check if email already exists
+            var existing = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (existing != null)
+            {
+                emailError = "Email already registered!";
+                return;
+            }
+
+            // ✅ Create new teacher user with Role = "Teacher"
+            var newTeacher = new User
+            {
+                Name = username,
+                Email = email,
+                Password = password,
+                Role = "Teacher" // Set role as Teacher
+            };
+
+            // ✅ Save to database
+            _context.Users.Add(newTeacher);
+            await _context.SaveChangesAsync();
+
+            successMessage = "Registration successful! Redirecting to login...";
+            message = "Registration successful! Redirecting to login...";
+            await Task.Delay(1500);
+            Navigation.NavigateTo("/logint");
+        }
+        catch (Exception ex)
+        {
+            // Show the actual error message for debugging
+            var errorMsg = ex.Message;
+            if (ex.InnerException != null)
+            {
+                errorMsg += $" | Inner: {ex.InnerException.Message}";
+            }
+            
+            message = $"Registration error: {errorMsg}";
+            emailError = $"Registration failed: {errorMsg}";
+            
+            // Log to console for debugging
+            Console.WriteLine($"Registration Error: {ex}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
+        }
+    }
+
     private void BackToLogin() => Navigation.NavigateTo("/logint", forceLoad: true);
     private void GoToHome() => Navigation.NavigateTo("/", forceLoad: true);
 }
+
