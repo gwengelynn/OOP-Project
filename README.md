@@ -1,5 +1,5 @@
-<<<<<<< HEAD
-# 🧠 OOP-Project — SmartQuiz
+
+# OOP-Project — SmartQuiz
 
 **SmartQuiz** is a system quiz application designed to make creating, managing, and taking quizzes easier and more efficient for both teachers and students.  
 It helps teachers create, manage, and check quizzes faster, while giving students a fun and interactive way to take them.
