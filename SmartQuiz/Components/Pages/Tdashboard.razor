@@ -1,6 +1,9 @@
 
 @page "/teacherdashboard"
+@using SmartQuiz.Services
 @inject NavigationManager Navigation
+@inject UserSessionService UserSessionService
+@inject SmartQuiz.Data.AppDbContext _context
 @rendermode InteractiveServer
 
 <style>
@@ -40,6 +43,16 @@ body, html {
     justify-content: center;
     font-weight: bold;
     color: white;
+    box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
+    overflow: hidden;
+}
+
+.profile-photo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
     box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
 }
 
@@ -349,8 +362,15 @@ body, html {
 <!-- NAVBAR -->
 <div class="navbar">
     <div class="nav-left">
-        <div class="profile-icon">👤</div>
-        <span style="color: #2c3e50; font-weight: 600; font-size: 1.1rem;">Teacher Profile</span>
+        @if (!string.IsNullOrWhiteSpace(currentUserPhoto))
+        {
+            <img src="@currentUserPhoto" alt="avatar" class="profile-photo" />
+        }
+        else
+        {
+            <div class="profile-icon">👤</div>
+        }
+        <a href="/profile" style="color: #2c3e50; font-weight: 600; font-size: 1.1rem; text-decoration: none;">Teacher Profile</a>
     </div>
 
     <div class="nav-links">
@@ -429,12 +449,31 @@ body, html {
 </div>
 
 @code {
+    private string currentUserPhoto = string.Empty;
     private DateTime currentDate = DateTime.Now;
     private DateTime selectedDate = DateTime.Now;
     private List<CalendarDay> calendarDays = new();
 
     protected override void OnInitialized()
     {
+        try
+        {
+            var teacherId = UserSessionService.CurrentUserId ?? 0;
+            if (teacherId > 0)
+            {
+                try
+                {
+                    var user = _context.Users.FirstOrDefault(u => u.Id == teacherId);
+                    currentUserPhoto = user?.PhotoPath ?? string.Empty;
+                }
+                catch { }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading teacher photo: {ex.Message}");
+        }
+        
         BuildCalendar();
     }
 

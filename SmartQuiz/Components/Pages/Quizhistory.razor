@@ -1,6 +1,12 @@
 @page "/view-quiz-history"
 @page "/quiz-history"
+@using SmartQuiz.Services
+@using SmartQuiz.Models
 @inject NavigationManager Navigation
+@inject QuizAttemptService QuizAttemptService
+@inject UserSessionService UserSessionService
+@inject QuizService QuizService
+@inject SmartQuiz.Data.AppDbContext _context
 @rendermode InteractiveServer
 
 <PageTitle>View Quiz History</PageTitle>
@@ -43,6 +49,16 @@ body, html {
     font-weight: bold;
     color: white;
     box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
+    overflow: hidden;
+}
+
+.profile-photo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+    box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
 }
 
 .nav-links a {
@@ -54,6 +70,7 @@ body, html {
     border-radius: 20px;
     transition: all 0.3s ease;
     position: relative;
+    display: inline-block;
 }
 
 .nav-links a:hover {
@@ -61,6 +78,12 @@ body, html {
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
+}
+
+.nav-links a.active {
+    background: linear-gradient(135deg, #61c2a2, #48a583);
+    color: white;
+    font-weight: 600;
 }
 
 .logout {
@@ -231,14 +254,21 @@ body, html {
 <!-- NAVBAR -->
 <div class="navbar">
     <div class="nav-left">
-        <div class="profile-icon">👤</div>
-        <span style="color: #2c3e50; font-weight: 600; font-size: 1.1rem;">Profile</span>
+        @if (!string.IsNullOrWhiteSpace(currentUserPhoto))
+        {
+            <img src="@currentUserPhoto" alt="avatar" class="profile-photo" />
+        }
+        else
+        {
+            <div class="profile-icon">👤</div>
+        }
+        <a href="/profile" style="color: #2c3e50; font-weight: 600; font-size: 1.1rem; text-decoration: none;">Profile</a>
     </div>
     <div class="nav-links">
-        <a href="/studentdashboard">Dashboard</a>
-        <a href="/notifications">Notifications</a>
-        <a href="/view-quiz-history" style="font-weight:bold; background: linear-gradient(135deg, #61c2a2, #48a583); color: white;">View Quiz History</a>
-        <a href="/take-quiz">Take Quiz</a>
+        <NavLink href="/studentdashboard" Match="NavLinkMatch.All">Dashboard</NavLink>
+        <NavLink href="/notifications">Notifications</NavLink>
+        <NavLink href="/view-quiz-history">View Quiz History</NavLink>
+        <NavLink href="/take-quiz">Take Quiz</NavLink>
         <a href="/" class="logout">Log out</a>
     </div>
 </div>
@@ -247,23 +277,24 @@ body, html {
 <div class="view-quizzes-container">
     <h3>Quizzes taken:</h3>
 
-    @if (quizzes.Count == 0)
+    @if (quizAttempts.Count == 0)
     {
         <p style="color: rgba(255,255,255,0.9); font-size: 1.1rem;">No quizzes taken yet.</p>
     }
     else
     {
         <div class="quiz-grid">
-            @foreach (var quiz in quizzes)
+            @foreach (var attempt in quizAttempts)
             {
+                var quizTitle = GetQuizTitle(attempt.QuizId);
                 <div class="quiz-card">
                     <div>
-                        <h5>@quiz.Title</h5>
-                        <p>@quiz.Description</p>
+                        <h5>@(quizTitle ?? $"Quiz #{attempt.QuizId}")</h5>
+                        <p>Submitted on @FormatDate(attempt.SubmittedAt)</p>
                     </div>
                     <div class="quiz-footer">
-                        <span><b>Final score:</b> @quiz.FinalScore</span>
-                        <button @onclick="() => ViewResults(quiz.Id)">View Results</button>
+                        <span><b>Final score:</b> @FormatScore(attempt.Score) (@attempt.CorrectAnswers/@attempt.TotalQuestions correct)</span>
+                        <button @onclick="() => ViewResults(attempt.Id, attempt.QuizId)">View Results</button>
                     </div>
                 </div>
             }
@@ -272,32 +303,68 @@ body, html {
 </div>
 
 @code {
-    private List<QuizHistory> quizzes = new();
+    private List<QuizAttempt> quizAttempts = new();
+    private string currentUserPhoto = string.Empty;
 
     protected override void OnInitialized()
     {
-        quizzes = new List<QuizHistory>
+        try
         {
-            new QuizHistory { Id = 1, Title = "Quiz #1", Description = "quiz overview... quiz overview... quiz overview...", FinalScore = "90%" },
-            new QuizHistory { Id = 2, Title = "Quiz #2", Description = "quiz overview... quiz overview... quiz overview...", FinalScore = "85%" },
-            new QuizHistory { Id = 3, Title = "Quiz #3", Description = "quiz overview... quiz overview... quiz overview...", FinalScore = "78%" },
-            new QuizHistory { Id = 4, Title = "Quiz #4", Description = "quiz overview... quiz overview... quiz overview...", FinalScore = "88%" },
-            new QuizHistory { Id = 5, Title = "Quiz #5", Description = "quiz overview... quiz overview... quiz overview...", FinalScore = "92%" },
-            new QuizHistory { Id = 6, Title = "Quiz #6", Description = "quiz overview... quiz overview... quiz overview...", FinalScore = "75%" }
-        };
+            var studentId = UserSessionService.CurrentUserId ?? 0;
+            if (studentId > 0)
+            {
+                quizAttempts = QuizAttemptService.GetStudentQuizAttempts(studentId);
+                Console.WriteLine($"Loaded {quizAttempts.Count} quiz attempts for student {studentId}");
+            }
+            else
+            {
+                Console.WriteLine("Student not logged in, cannot load quiz history");
+            }
+            try
+            {
+                var userId = UserSessionService.CurrentUserId ?? 0;
+                if (userId > 0)
+                {
+                    var user = _context.Users.FirstOrDefault(u => u.Id == userId);
+                    currentUserPhoto = user?.PhotoPath ?? string.Empty;
+                }
+            }
+            catch {}
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading quiz history: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            quizAttempts = new List<QuizAttempt>();
+        }
     }
 
-    private void ViewResults(int id)
+    private void ViewResults(int attemptId, int quizId)
     {
-        Navigation.NavigateTo($"/quiz-results/{id}");
+        Navigation.NavigateTo($"/quiz-results/{attemptId}?quizId={quizId}");
     }
 
-    public class QuizHistory
+    private string FormatScore(double score)
     {
-        public int Id { get; set; }
-        public string? Title { get; set; }
-        public string? Description { get; set; }
-        public string? FinalScore { get; set; }
+        return $"{score:F1}%";
+    }
+
+    private string FormatDate(DateTime date)
+    {
+        return date.ToString("MMM dd, yyyy HH:mm");
+    }
+
+    private string? GetQuizTitle(int quizId)
+    {
+        try
+        {
+            var quiz = QuizService.GetQuizByIdForStudent(quizId);
+            return quiz?.Title;
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
 

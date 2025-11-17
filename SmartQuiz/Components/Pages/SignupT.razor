@@ -1,6 +1,7 @@
 @page "/signupt"
 @inject NavigationManager Navigation
 @inject SmartQuiz.Data.AppDbContext _context
+@inject SmartQuiz.Services.DbContextFactory _dbContextFactory
 @using SmartQuiz.Models
 @using Microsoft.EntityFrameworkCore
 @rendermode InteractiveServer
@@ -402,6 +403,9 @@ nav a:hover {
             // ✅ Save to database
             _context.Users.Add(newTeacher);
             await _context.SaveChangesAsync();
+
+            // ✅ Create user-specific database for quizzes and questions
+            _dbContextFactory.EnsureUserDatabaseExists(newTeacher.Id);
 
             successMessage = "Registration successful! Redirecting to login...";
             message = "Registration successful! Redirecting to login...";

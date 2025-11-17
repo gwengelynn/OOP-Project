@@ -1,5 +1,12 @@
 @page "/studentdashboard"
+@using SmartQuiz.Services
+@using SmartQuiz.Models
+@using System.Linq
 @inject NavigationManager Navigation
+@inject QuizService QuizService
+@inject QuizAttemptService QuizAttemptService
+@inject UserSessionService UserSessionService
+@inject SmartQuiz.Data.AppDbContext _context
 @rendermode InteractiveServer
 
 <style>
@@ -40,6 +47,16 @@ body, html {
     font-weight: bold;
     color: white;
     box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
+    overflow: hidden;
+}
+
+.profile-photo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+    box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
 }
 
 .nav-links a {
@@ -51,6 +68,7 @@ body, html {
     border-radius: 20px;
     transition: all 0.3s ease;
     position: relative;
+    display: inline-block;
 }
 
 .nav-links a:hover {
@@ -58,6 +76,12 @@ body, html {
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
+}
+
+.nav-links a.active {
+    background: linear-gradient(135deg, #61c2a2, #48a583);
+    color: white;
+    font-weight: 600;
 }
 
 .logout {
@@ -482,15 +506,22 @@ body, html {
 <!-- NAVBAR -->
 <div class="navbar">
     <div class="nav-left">
-        <div class="profile-icon">👤</div>
-        <span style="color: #2c3e50; font-weight: 600; font-size: 1.1rem;">Profile</span>
+        @if (!string.IsNullOrWhiteSpace(currentUserPhoto))
+        {
+            <img src="@currentUserPhoto" alt="avatar" class="profile-photo" />
+        }
+        else
+        {
+            <div class="profile-icon">👤</div>
+        }
+        <a href="/profile" style="color: #2c3e50; font-weight: 600; font-size: 1.1rem; text-decoration: none;">Profile</a>
     </div>
 
     <div class="nav-links">
-        <a href="/studentdashboard" style="font-weight:bold; background: linear-gradient(135deg, #61c2a2, #48a583); color: white;">Dashboard</a>
-        <a href="/notifications">Notifications</a>
-        <a href="/quiz-history">View Quiz History</a>
-        <a href="/take-quiz">Take Quiz</a>
+        <NavLink href="/studentdashboard" Match="NavLinkMatch.All">Dashboard</NavLink>
+        <NavLink href="/notifications">Notifications</NavLink>
+        <NavLink href="/view-quiz-history">View Quiz History</NavLink>
+        <NavLink href="/take-quiz">Take Quiz</NavLink>
         <a href="/" class="logout">Log out</a>
     </div>
 </div>
@@ -504,52 +535,83 @@ body, html {
 
     <div class="dashboard-grid">
         <!-- AVERAGE SCORES -->
-        <div class="card average-scores" @onclick="@(() => Navigation.NavigateTo("/quiz-history"))">
+        <div class="card average-scores" @onclick="@(() => Navigation.NavigateTo("/view-quiz-history"))">
             <div class="card-icon"></div>
             <h3>Average Scores</h3>
-            <div class="line-chart-container">
-                <div class="line-chart-grid">
-                    <div class="grid-line"></div>
-                    <div class="grid-line"></div>
-                    <div class="grid-line"></div>
-                    <div class="grid-line"></div>
+            @if (recentAttempts.Any())
+            {
+                <div class="line-chart-container">
+                    <div class="line-chart-grid">
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                    </div>
+                    <!-- Dynamic line chart based on actual scores -->
+                    <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; top: 0; left: 0;">
+                        @{
+                            var points = GetLineChartPoints(recentAttempts);
+                        }
+                        <polyline points="@points" 
+                                  fill="none" stroke="#3498db" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        @for (int i = 0; i < recentAttempts.Count && i < 5; i++)
+                        {
+                            var x = 10 + (i * 15);
+                            var score = recentAttempts[i].Score;
+                            var y = 90 - (score * 0.6); // Scale score to chart height
+                            <circle cx="@x" cy="@y" r="2" fill="#3498db"/>
+                        }
+                    </svg>
+                    <div class="chart-axis">
+                        @for (int i = 0; i < recentAttempts.Count && i < 5; i++)
+                        {
+                            <span>@(GetQuizTitle(recentAttempts[i].QuizId))</span>
+                        }
+                    </div>
                 </div>
-                <!-- Simplified line chart visualization -->
-                <svg width="100%" height="100%" style="position: absolute; top: 0; left: 0;">
-                    <polyline points="10%,70% 25%,50% 40%,55% 55%,30% 70%,30%" 
-                              fill="none" stroke="#3498db" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                    <circle cx="10%" cy="70%" r="4" fill="#3498db"/>
-                    <circle cx="25%" cy="50%" r="4" fill="#3498db"/>
-                    <circle cx="40%" cy="55%" r="4" fill="#3498db"/>
-                    <circle cx="55%" cy="30%" r="4" fill="#3498db"/>
-                    <circle cx="70%" cy="30%" r="4" fill="#3498db"/>
-                </svg>
-                <div class="chart-axis">
-                    <span>Quiz #1</span>
-                    <span>Quiz #2</span>
-                    <span>Quiz #3</span>
-                    <span>Quiz #4</span>
-                    <span>Quiz #5</span>
+                <div style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: #2c3e50; font-weight: 600;">
+                    Average: @(averageScore.ToString("F1"))%
                 </div>
-            </div>
+            }
+            else
+            {
+                <div class="empty-list">
+                    <p>No quiz attempts yet. Take your first quiz to see your scores!</p>
+                </div>
+            }
         </div>
 
         <!-- QUIZ COMPLETION -->
-        <div class="card completion" @onclick="@(() => Navigation.NavigateTo("/quiz-history"))">
+        <div class="card completion" @onclick="@(() => Navigation.NavigateTo("/view-quiz-history"))">
             <div class="card-icon"></div>
             <h3>Quiz Completion</h3>
-            <div class="donut-chart-container">
-                <div class="donut-chart">
-                    <div class="donut-inner">
-                        <div class="donut-percentage">71.4%</div>
-                        <div class="donut-label">Completed</div>
+            @if (totalAvailableQuizzes > 0)
+            {
+                <div class="donut-chart-container">
+                    @{
+                        var completionDeg = completionPercentage * 3.6;
+                    }
+                    <div class="donut-chart" style="background: conic-gradient(
+                        #3498db 0deg @(completionDeg.ToString("F1"))deg,
+                        #e74c3c @(completionDeg.ToString("F1"))deg 360deg
+                    );">
+                        <div class="donut-inner">
+                            <div class="donut-percentage">@(completionPercentage.ToString("F1"))%</div>
+                            <div class="donut-label">Completed</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #7f8c8d;">
-                <span style="color: #3498db;">●</span> Completed Quizzes: 71.4%<br>
-                <span style="color: #e74c3c;">●</span> Unopened Quizzes: 28.6%
-            </div>
+                <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #7f8c8d;">
+                    <span style="color: #3498db;">●</span> Completed: @completedQuizzesCount<br>
+                    <span style="color: #e74c3c;">●</span> Available: @(totalAvailableQuizzes - completedQuizzesCount)
+                </div>
+            }
+            else
+            {
+                <div class="empty-list">
+                    <p>No quizzes available yet.</p>
+                </div>
+            }
         </div>
 
         <!-- QUIZ LIST -->
@@ -559,12 +621,13 @@ body, html {
             <div class="quiz-list-container">
                 @if (availableQuizzes.Any())
                 {
-                    @foreach (var quiz in availableQuizzes)
+                    @foreach (var quiz in availableQuizzes.Take(5))
                     {
+                        var hasTaken = QuizAttemptService.HasStudentTakenQuiz(quiz.Id, currentStudentId);
                         <div class="quiz-list-item" @onclick:stopPropagation="true" @onclick="@(() => Navigation.NavigateTo("/take-quiz"))">
                             <h5>@quiz.Title</h5>
-                            <p>@quiz.Description</p>
-                            <span class="quiz-status @quiz.Status">@quiz.Status</span>
+                            <p>@(string.IsNullOrEmpty(quiz.Description) ? "No description" : quiz.Description)</p>
+                            <span class="quiz-status @(hasTaken ? "completed" : "available")">@(hasTaken ? "Completed" : "Available")</span>
                         </div>
                     }
                 }
@@ -581,74 +644,180 @@ body, html {
         <div class="card big-card performance">
             <div class="card-icon"></div>
             <h3>Overall Quiz Performance</h3>
-            <div class="bar-chart">
-                <div class="chart-legend">
-                    <div class="legend-item">
-                        <div class="legend-color legend-blue"></div>
-                        <span>Correct Answers</span>
+            @if (performanceData.Any())
+            {
+                <div class="bar-chart">
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color legend-blue"></div>
+                            <span>Correct Answers</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color legend-red"></div>
+                            <span>Incorrect Answers</span>
+                        </div>
                     </div>
-                    <div class="legend-item">
-                        <div class="legend-color legend-red"></div>
-                        <span>Incorrect Answers</span>
+                    
+                    @foreach (var perf in performanceData.Take(5))
+                    {
+                        var maxValue = Math.Max(perf.Correct, perf.Incorrect);
+                        var maxWidth = maxValue > 0 ? 100 : 0;
+                        var correctWidth = maxValue > 0 ? (perf.Correct * 100.0 / maxValue) : 0;
+                        var incorrectWidth = maxValue > 0 ? (perf.Incorrect * 100.0 / maxValue) : 0;
+                        
+                        <div class="bar-item">
+                            <div class="bar-label">@perf.QuizTitle</div>
+                            <div class="bar-container">
+                                <div class="bar bar-correct" style="width: @(correctWidth)%;">@perf.Correct</div>
+                                <div class="bar bar-incorrect" style="width: @(incorrectWidth)%;">@perf.Incorrect</div>
+                            </div>
+                        </div>
+                    }
+                    
+                    @{
+                        var maxBarValue = performanceData.Any() ? performanceData.Max(p => Math.Max(p.Correct, p.Incorrect)) : 10;
+                        var scaleStep = maxBarValue > 0 ? Math.Ceiling(maxBarValue / 4.0) : 5;
+                    }
+                    <div class="bar-scale">
+                        <span>0</span>
+                        <span>@(scaleStep)</span>
+                        <span>@(scaleStep * 2)</span>
+                        <span>@(scaleStep * 3)</span>
+                        <span>@(scaleStep * 4)</span>
                     </div>
                 </div>
-                
-                <div class="bar-item">
-                    <div class="bar-label">Quiz #1</div>
-                    <div class="bar-container">
-                        <div class="bar bar-correct" style="width: 20%;">4</div>
-                        <div class="bar bar-incorrect" style="width: 30%;">6</div>
-                    </div>
+            }
+            else
+            {
+                <div class="empty-list">
+                    <p>No quiz performance data yet. Complete some quizzes to see your performance!</p>
                 </div>
-                
-                <div class="bar-item">
-                    <div class="bar-label">Quiz #2</div>
-                    <div class="bar-container">
-                        <div class="bar bar-correct" style="width: 40%;">8</div>
-                        <div class="bar bar-incorrect" style="width: 70%;">14</div>
-                    </div>
-                </div>
-                
-                <div class="bar-item">
-                    <div class="bar-label">Quiz #3</div>
-                    <div class="bar-container">
-                        <div class="bar bar-correct" style="width: 75%;">15</div>
-                        <div class="bar bar-incorrect" style="width: 85%;">17</div>
-                    </div>
-                </div>
-                
-                <div class="bar-scale">
-                    <span>0</span>
-                    <span>5</span>
-                    <span>10</span>
-                    <span>15</span>
-                    <span>20</span>
-                </div>
-            </div>
+            }
         </div>
     </div>
 </div>
 
 @code {
-    private List<AvailableQuiz> availableQuizzes = new();
+    private List<Quiz> availableQuizzes = new();
+    private List<QuizAttempt> quizAttempts = new();
+    private List<QuizAttempt> recentAttempts = new();
+    private List<PerformanceData> performanceData = new();
+    private int currentStudentId = 0;
+    private double averageScore = 0;
+    private int completedQuizzesCount = 0;
+    private int totalAvailableQuizzes = 0;
+    private double completionPercentage = 0;
+    private string currentUserPhoto = string.Empty;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        availableQuizzes = new List<AvailableQuiz>
+        try
         {
-            new AvailableQuiz { Id = 1, Title = "General Knowledge Quiz", Description = "Test your knowledge across various topics", Status = "available" },
-            new AvailableQuiz { Id = 2, Title = "Science and Nature", Description = "Questions about science and the natural world", Status = "available" },
-            new AvailableQuiz { Id = 3, Title = "Math Fundamentals", Description = "Basic mathematics concepts and problems", Status = "completed" },
-            new AvailableQuiz { Id = 4, Title = "History and Politics", Description = "Historical events and political systems", Status = "available" },
-        };
+            currentStudentId = UserSessionService.CurrentUserId ?? 0;
+            
+            if (currentStudentId > 0)
+            {
+                // Load current user's photo if any
+                try
+                {
+                    var user = await _context.Users.FindAsync(currentStudentId);
+                    currentUserPhoto = user?.PhotoPath ?? string.Empty;
+                }
+                catch { }
+                // Load available quizzes
+                availableQuizzes = QuizService.GetAllPublishedQuizzesForStudents();
+                totalAvailableQuizzes = availableQuizzes.Count;
+                
+                // Load student's quiz attempts
+                quizAttempts = QuizAttemptService.GetStudentQuizAttempts(currentStudentId);
+                
+                // Get unique quiz IDs that the student has taken
+                var takenQuizIds = quizAttempts.Select(a => a.QuizId).Distinct().ToList();
+                completedQuizzesCount = takenQuizIds.Count;
+                
+                // Calculate completion percentage
+                if (totalAvailableQuizzes > 0)
+                {
+                    completionPercentage = (completedQuizzesCount * 100.0) / totalAvailableQuizzes;
+                }
+                
+                // Get recent attempts (last 5, ordered by most recent)
+                recentAttempts = quizAttempts
+                    .OrderByDescending(a => a.SubmittedAt)
+                    .Take(5)
+                    .ToList();
+                
+                // Calculate average score
+                if (quizAttempts.Any())
+                {
+                    averageScore = quizAttempts.Average(a => a.Score);
+                }
+                
+                // Build performance data for bar chart
+                performanceData = new List<PerformanceData>();
+                foreach (var attempt in quizAttempts.OrderByDescending(a => a.SubmittedAt).Take(5))
+                {
+                    var quiz = QuizService.GetQuizByIdForStudent(attempt.QuizId);
+                    if (quiz != null)
+                    {
+                        performanceData.Add(new PerformanceData
+                        {
+                            QuizTitle = quiz.Title ?? "Unknown Quiz",
+                            Correct = attempt.CorrectAnswers,
+                            Incorrect = attempt.TotalQuestions - attempt.CorrectAnswers
+                        });
+                    }
+                }
+                
+                Console.WriteLine($"Dashboard loaded: StudentId={currentStudentId}, {quizAttempts.Count} attempts, {availableQuizzes.Count} available quizzes, Average: {averageScore:F1}%");
+                Console.WriteLine($"Available quizzes details:");
+                foreach (var quiz in availableQuizzes)
+                {
+                    Console.WriteLine($"  - Quiz ID: {quiz.Id}, Title: {quiz.Title}, IsPublished: {quiz.IsPublished}, IsPrivate: {quiz.IsPrivate}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+        }
     }
 
-    public class AvailableQuiz
+    private string GetLineChartPoints(List<QuizAttempt> attempts)
     {
-        public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string Status { get; set; } = "available";
+        if (!attempts.Any()) return "";
+        
+        var points = new List<string>();
+        var maxAttempts = Math.Min(attempts.Count, 5);
+        
+        for (int i = 0; i < maxAttempts; i++)
+        {
+            var x = 10 + (i * 15);
+            var score = attempts[i].Score;
+            var y = 90 - (score * 0.6); // Scale score (0-100) to chart height (0-90)
+            // Use numeric values instead of percentages for SVG polyline
+            points.Add($"{x},{y}");
+        }
+        
+        return string.Join(" ", points);
+    }
+
+    private string GetQuizTitle(int quizId)
+    {
+        var quiz = QuizService.GetQuizByIdForStudent(quizId);
+        if (quiz != null && !string.IsNullOrEmpty(quiz.Title))
+        {
+            // Truncate long titles
+            return quiz.Title.Length > 10 ? quiz.Title.Substring(0, 10) + "..." : quiz.Title;
+        }
+        return $"Quiz {quizId}";
+    }
+
+    private class PerformanceData
+    {
+        public string QuizTitle { get; set; } = "";
+        public int Correct { get; set; }
+        public int Incorrect { get; set; }
     }
 }
 

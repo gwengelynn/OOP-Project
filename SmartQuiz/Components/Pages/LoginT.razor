@@ -1,6 +1,8 @@
 @page "/logint"
+@using SmartQuiz.Services
 @inject NavigationManager Navigation
 @inject SmartQuiz.Data.AppDbContext _context
+@inject UserSessionService UserSessionService
 @using SmartQuiz.Models
 @using Microsoft.EntityFrameworkCore
 @rendermode InteractiveServer
@@ -272,6 +274,7 @@ nav a:hover {
             <a class="forgot-password" @onclick="GoToForgotPassword">Forgot Password?</a>
 
             <div class="signup-section">
+                <p></p>
                 <p>Don't have an account?</p>
                 <button class="signup-btn" @onclick="GoToSignup">Sign Up</button>
             </div>
@@ -283,16 +286,71 @@ nav a:hover {
     © 2025 SmartQuiz | Making learning fun and interactive for everyone.
 </div>
 
+
 @code {
     private string usernameOrEmail = string.Empty;
     private string password = string.Empty;
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
-    private bool showPassword = false;
 
+    private bool showPassword = false;
     private string PasswordInputType => showPassword ? "text" : "password";
 
     private void TogglePasswordVisibility() => showPassword = !showPassword;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Ensure database and Users table exist
+        try
+        {
+            _context.Database.EnsureCreated();
+            
+            // Verify Users table exists, create if not
+            var connection = _context.Database.GetDbConnection();
+            var wasOpen = connection.State == System.Data.ConnectionState.Open;
+            
+            if (!wasOpen)
+            {
+                connection.Open();
+            }
+
+            try
+            {
+                using var checkCommand = connection.CreateCommand();
+                checkCommand.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='Users'";
+                var result = checkCommand.ExecuteScalar();
+
+                if (result == null)
+                {
+                    // Table doesn't exist, create it
+                    using var createCommand = connection.CreateCommand();
+                    createCommand.CommandText = @"
+                        CREATE TABLE IF NOT EXISTS Users (
+                            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            Name TEXT NOT NULL DEFAULT '',
+                            Email TEXT NOT NULL DEFAULT '',
+                            Password TEXT NOT NULL DEFAULT '',
+                            Role TEXT NOT NULL DEFAULT 'Student',
+                            Bio TEXT NOT NULL DEFAULT '',
+                            AlternativePassword TEXT NOT NULL DEFAULT ''
+                        )";
+                    createCommand.ExecuteNonQuery();
+                    Console.WriteLine("Login page: Created Users table.");
+                }
+            }
+            finally
+            {
+                if (!wasOpen)
+                {
+                    connection.Close();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Login page: Error ensuring Users table exists: {ex.Message}");
+        }
+    }
 
     private async Task HandleLogin()
     {
@@ -327,6 +385,10 @@ nav a:hover {
                 return;
             }
 
+            // Set user session
+            UserSessionService.SetCurrentUser(teacher.Id, teacher.Name ?? "Teacher", teacher.Role ?? "Teacher");
+            Console.WriteLine($"Teacher login: SetCurrentUser called for UserId={teacher.Id}, Name={teacher.Name}");
+
             // Login successful
             successMessage = "Login successful! Redirecting...";
             await Task.Delay(1000);
@@ -345,4 +407,3 @@ nav a:hover {
     private void GoToForgotPassword() => Navigation.NavigateTo("/forgotpasswordt", true);
     private void GoToHome() => Navigation.NavigateTo("/", true);
 }
-

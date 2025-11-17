@@ -1,7 +1,12 @@
 @page "/notifications"
-@page "/studentsnotifications"
+@using SmartQuiz.Services
+@using SmartQuiz.Models
 @inject NavigationManager Navigation
-@rendermode InteractiveServer
+@inject NotificationService NotificationService
+@inject UserSessionService UserSessionService
+@inject QuizService QuizService
+@inject QuizAttemptService QuizAttemptService
+@inject SmartQuiz.Data.AppDbContext _context
 
 <style>
 body, html {
@@ -41,6 +46,16 @@ body, html {
     font-weight: bold;
     color: white;
     box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
+    overflow: hidden;
+}
+
+.profile-photo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+    box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
 }
 
 .nav-links a {
@@ -52,6 +67,7 @@ body, html {
     border-radius: 20px;
     transition: all 0.3s ease;
     position: relative;
+    display: inline-block;
 }
 
 .nav-links a:hover {
@@ -59,6 +75,12 @@ body, html {
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
+}
+
+.nav-links a.active {
+    background: linear-gradient(135deg, #61c2a2, #48a583);
+    color: white;
+    font-weight: 600;
 }
 
 .logout {
@@ -233,15 +255,22 @@ body, html {
 <!-- NAVBAR -->
 <div class="navbar">
     <div class="nav-left">
-        <div class="profile-icon">👤</div>
-        <span style="color: #2c3e50; font-weight: 600; font-size: 1.1rem;">Profile</span>
+        @if (!string.IsNullOrWhiteSpace(currentUserPhoto))
+        {
+            <img src="@currentUserPhoto" alt="avatar" class="profile-photo" />
+        }
+        else
+        {
+            <div class="profile-icon">👤</div>
+        }
+        <a href="/profile" style="color: #2c3e50; font-weight: 600; font-size: 1.1rem; text-decoration: none;">Profile</a>
     </div>
 
     <div class="nav-links">
-        <a href="/studentdashboard">Dashboard</a>
-        <a href="/notifications" style="font-weight:bold; background: linear-gradient(135deg, #61c2a2, #48a583); color: white;">Notifications</a>
-        <a href="/view-quiz-history">View Quiz History</a>
-        <a href="/take-quiz">Take Quiz</a>
+        <NavLink href="/studentdashboard" Match="NavLinkMatch.All">Dashboard</NavLink>
+        <NavLink href="/notifications">Notifications</NavLink>
+        <NavLink href="/view-quiz-history">View Quiz History</NavLink>
+        <NavLink href="/take-quiz">Take Quiz</NavLink>
         <a href="/" class="logout">Log out</a>
     </div>
 </div>
@@ -251,24 +280,159 @@ body, html {
     <h2>Notifications</h2>
 
     <div class="notifications-container">
-        @for (int i = 0; i < 5; i++)
+        @if (notifications == null || notifications.Count == 0)
         {
-            <div class="notification-card">
-                <div class="notification-header">Date: MM/DD, DAY</div>
-                <div class="notification-subject">SUBJECT</div>
-                <div class="notification-content">
-                    <span class="notification-title">QUIZ TOPIC #@(i + 1)</span>
-                    <div style="display:flex; align-items:center; gap:15px; flex-wrap: wrap;">
-                        <button class="quiz-btn" @onclick="@(() => Navigation.NavigateTo("/take-quiz"))">Go to quiz</button>
-                        <span class="time-published">Time published</span>
-                    </div>
-                </div>
+            <div style="text-align: center; padding: 50px; color: white;">
+                <p style="font-size: 1.2rem; margin-bottom: 10px;">No notifications yet</p>
+                <p style="font-size: 0.9rem; opacity: 0.9;">You'll see notifications here when new quizzes are published or when you receive quiz results.</p>
             </div>
+        }
+        else
+        {
+            @foreach (var notification in notifications)
+            {
+                <div class="notification-card">
+                    <div class="notification-header">@notification.CreatedAt.ToString("MM/dd, dddd")</div>
+                    <div class="notification-subject">@notification.Type</div>
+                    <div class="notification-content">
+                        <span class="notification-title">@notification.Title</span>
+                        <div style="display:flex; align-items:center; gap:15px; flex-wrap: wrap;">
+                            @if (notification.QuizId.HasValue)
+                            {
+                                <a href="@GetQuizUrl(notification.QuizId.Value)" class="quiz-btn" style="text-decoration: none; display: inline-block;">Go to quiz</a>
+                            }
+                            <span class="time-published">@notification.CreatedAt.ToString("hh:mm tt")</span>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(notification.Message))
+                    {
+                        <div style="margin-top: 12px; padding: 12px; background: rgba(97, 194, 162, 0.1); border-radius: 8px; color: #2c3e50; font-size: 0.9rem;">
+                            @notification.Message
+                        </div>
+                    }
+                    @if (notification.Score.HasValue)
+                    {
+                        <div style="margin-top: 8px; font-weight: 600; color: #61c2a2;">
+                            Score: @notification.Score.Value.ToString("F1")%
+                        </div>
+                    }
+                </div>
+            }
         }
     </div>
 </div>
 
 @code {
-    // Add any data binding or logic here if needed
+    private List<Notification>? notifications;
+    private string currentUserPhoto = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            var studentId = UserSessionService.CurrentUserId ?? 0;
+            if (studentId > 0)
+            {
+                try
+                {
+                    var user = _context.Users.FirstOrDefault(u => u.Id == studentId);
+                    currentUserPhoto = user?.PhotoPath ?? string.Empty;
+                }
+                catch {}
+                notifications = NotificationService.GetStudentNotifications(studentId);
+                Console.WriteLine($"Notifications: Loaded {notifications.Count} notifications for student {studentId}");
+            }
+            else
+            {
+                Console.WriteLine("Notifications: Student not logged in");
+                notifications = new List<Notification>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading notifications: {ex.Message}");
+            notifications = new List<Notification>();
+        }
+    }
+
+    private string GetQuizUrl(int quizId)
+    {
+        try
+        {
+            // Check if student has already taken this quiz
+            var studentId = UserSessionService.CurrentUserId ?? 0;
+            if (studentId > 0 && QuizAttemptService.HasStudentTakenQuiz(quizId, studentId))
+            {
+                // Redirect to results page if they've already taken it
+                var attempt = QuizAttemptService.GetStudentQuizAttempt(quizId, studentId);
+                if (attempt != null)
+                {
+                    return $"/quiz-results/{attempt.Id}?quizId={quizId}";
+                }
+                else
+                {
+                    return "/view-quiz-history";
+                }
+            }
+            
+            // Verify quiz exists and is accessible
+            var quiz = QuizService.GetQuizByIdForStudent(quizId);
+            if (quiz != null)
+            {
+                // Check if quiz is private and needs a code
+                if (quiz.IsPrivate && !string.IsNullOrEmpty(quiz.QuizCode))
+                {
+                    return $"/take-quiz-code/{quiz.QuizCode}";
+                }
+                else
+                {
+                    // Navigate to take the quiz
+                    return $"/take-quiz/{quizId}";
+                }
+            }
+            else
+            {
+                // Quiz might not be published or accessible, redirect to take-quiz page
+                return "/take-quiz";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting quiz URL for quiz {quizId}: {ex.Message}");
+            // Fallback: navigate to take-quiz page
+            return "/take-quiz";
+        }
+    }
+
+}
+
+using System.ComponentModel.DataAnnotations;
+
+namespace SmartQuiz.Models.Base
+{
+    /// <summary>
+    /// Abstract base class for all entities in the system.
+    /// Demonstrates: ABSTRACTION - defines common structure for all entities
+    /// </summary>
+    public abstract class BaseEntity
+    {
+        [Key]
+        public int Id { get; set; } // Public setter for Entity Framework compatibility
+
+        /// <summary>
+        /// Abstract method that must be implemented by derived classes.
+        /// Demonstrates: ABSTRACTION - forces derived classes to define validation
+        /// </summary>
+        public abstract bool Validate();
+
+        /// <summary>
+        /// Virtual method that can be overridden by derived classes.
+        /// Demonstrates: POLYMORPHISM - allows different implementations
+        /// </summary>
+        public virtual string GetDisplayName()
+        {
+            return $"Entity #{Id}";
+        }
+    }
 }
 
