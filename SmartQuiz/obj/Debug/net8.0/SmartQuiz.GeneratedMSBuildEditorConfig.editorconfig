@@ -46,6 +46,14 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9FcnJvci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/workspaces/OOP-Project/SmartQuiz/Components/Pages/ForgotPassword.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Gb3Jnb3RQYXNzd29yZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/workspaces/OOP-Project/SmartQuiz/Components/Pages/ForgotPasswordT.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Gb3Jnb3RQYXNzd29yZFQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/workspaces/OOP-Project/SmartQuiz/Components/Pages/Home.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ib21lLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -66,16 +74,36 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Mb2dpblQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/workspaces/OOP-Project/SmartQuiz/Components/Pages/MigrateQuiz.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9NaWdyYXRlUXVpei5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/workspaces/OOP-Project/SmartQuiz/Components/Pages/Notifications.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ob3RpZmljYXRpb25zLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/workspaces/OOP-Project/SmartQuiz/Components/Pages/Profile.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Qcm9maWxlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/workspaces/OOP-Project/SmartQuiz/Components/Pages/Quizhistory.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9RdWl6aGlzdG9yeS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/workspaces/OOP-Project/SmartQuiz/Components/Pages/QuizMode.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9RdWl6TW9kZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/workspaces/OOP-Project/SmartQuiz/Components/Pages/QuizResults.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9RdWl6UmVzdWx0cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/workspaces/OOP-Project/SmartQuiz/Components/Pages/Sdashboard.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9TZGFzaGJvYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/workspaces/OOP-Project/SmartQuiz/Components/Pages/Settings.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9TZXR0aW5ncy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/workspaces/OOP-Project/SmartQuiz/Components/Pages/Signup.razor]
@@ -96,6 +124,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/workspaces/OOP-Project/SmartQuiz/Components/Pages/ViewQuizzesT/Quizdetails.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9WaWV3UXVpenplc1QvUXVpemRldGFpbHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/workspaces/OOP-Project/SmartQuiz/Components/Pages/ViewQuizzesT/QuizTakers.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9WaWV3UXVpenplc1QvUXVpelRha2Vycy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/workspaces/OOP-Project/SmartQuiz/Components/Pages/ViewQuizzesT/ViewQuiz.razor]

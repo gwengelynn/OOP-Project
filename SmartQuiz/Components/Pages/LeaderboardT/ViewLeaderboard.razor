@@ -1,5 +1,12 @@
 @page "/leaderboard"
+@using SmartQuiz.Services
+@using SmartQuiz.Models
+@using System.Linq
 @inject NavigationManager Navigation
+@inject QuizService QuizService
+@inject QuizAttemptService QuizAttemptService
+@inject UserSessionService UserSessionService
+@inject SmartQuiz.Data.AppDbContext _context
 @rendermode InteractiveServer
 
 <PageTitle>Leaderboard</PageTitle>
@@ -41,6 +48,16 @@ body, html {
     justify-content: center;
     font-weight: bold;
     color: white;
+    box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
+    overflow: hidden;
+}
+
+.profile-photo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
     box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
 }
 
@@ -157,6 +174,136 @@ body, html {
     border-top: 1px solid #e0e0e0;
 }
 
+.quiz-card-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.quiz-card-btn {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.quiz-card-btn-primary {
+    background: linear-gradient(135deg, #61c2a2, #48a583);
+    color: white;
+    box-shadow: 0 4px 15px rgba(97, 194, 162, 0.3);
+}
+
+.quiz-card-btn-primary:hover {
+    background: linear-gradient(135deg, #48a583, #3d8f6f);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(97, 194, 162, 0.4);
+}
+
+.quiz-card-btn-secondary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.quiz-card-btn-secondary:hover {
+    background: linear-gradient(135deg, #764ba2, #5a3a7a);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.quiz-stats {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin-top: 8px;
+}
+
+.mini-leaderboard {
+    margin: 15px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+}
+
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.leaderboard-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.rank-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.rank-1 {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: white;
+}
+
+.rank-2 {
+    background: linear-gradient(135deg, #C0C0C0, #A0A0A0);
+    color: white;
+}
+
+.rank-3 {
+    background: linear-gradient(135deg, #CD7F32, #B87333);
+    color: white;
+}
+
+.rank-0 {
+    background: #e0e0e0;
+    color: #666;
+}
+
+.student-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.student-name {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.student-score {
+    font-weight: 700;
+    color: #61c2a2;
+    font-size: 0.95rem;
+}
+
 /* Responsive Design */
 @@media (max-width: 768px) {
     .leaderboard-container {
@@ -204,8 +351,15 @@ body, html {
 <!-- NAVBAR -->
 <div class="navbar">
     <div class="nav-left">
-        <div class="profile-icon">👤</div>
-        <span style="color: #2c3e50; font-weight: 600; font-size: 1.1rem;">Teacher Profile</span>
+        @if (!string.IsNullOrWhiteSpace(currentUserPhoto))
+        {
+            <img src="@currentUserPhoto" alt="avatar" class="profile-photo" />
+        }
+        else
+        {
+            <div class="profile-icon">👤</div>
+        }
+        <a href="/profile" style="color: #2c3e50; font-weight: 600; font-size: 1.1rem; text-decoration: none;">Teacher Profile</a>
     </div>
 
     <div class="nav-links">
@@ -220,30 +374,105 @@ body, html {
 <!-- MAIN CONTENT -->
 <div class="leaderboard-container">
     <h3>📊 Quiz Leaderboards</h3>
-    <div class="quiz-grid">
-        @foreach (var quiz in quizzes)
-        {
-            <div class="quiz-card" @onclick="() => OpenLeaderboard(quiz.Id)">
-                <h5>@quiz.Title</h5>
-                <p>@quiz.Description</p>
-                <p style="font-size:0.85rem;color:#61c2a2;">Click to view leaderboard ➜</p>
-            </div>
-        }
-    </div>
+    @if (loading)
+    {
+        <div style="color: white; text-align: center; padding: 50px;">Loading quizzes...</div>
+    }
+    else if (quizzes.Count == 0)
+    {
+        <div style="color: white; text-align: center; padding: 50px;">
+            <p>No published quizzes found.</p>
+            <p style="font-size: 0.9rem; opacity: 0.9;">Publish a quiz to see it in the leaderboard.</p>
+        </div>
+    }
+    else
+    {
+        <div class="quiz-grid">
+            @foreach (var quiz in quizzes)
+            {
+                var topStudents = GetTopStudents(quiz.Id, 5);
+                <div class="quiz-card">
+                    <h5>@quiz.Title</h5>
+                    <p>@quiz.Description</p>
+                    <div class="quiz-stats">
+                        <strong>@GetAttemptCount(quiz.Id)</strong> student(s) have taken this quiz
+                    </div>
+                    
+                    @if (topStudents.Any())
+                    {
+                        <div class="mini-leaderboard">
+                            <h6 style="margin: 15px 0 10px 0; font-size: 1rem; color: #2c3e50; font-weight: 600;">🏆 Top Performers</h6>
+                            <div class="leaderboard-list">
+                                @for (int i = 0; i < topStudents.Count; i++)
+                                {
+                                    var student = topStudents[i];
+                                    var rank = i + 1;
+                                    <div class="leaderboard-item">
+                                        <div class="rank-badge rank-@(rank <= 3 ? rank : 0)">@rank</div>
+                                        <div class="student-info">
+                                            <div class="student-name">@student.Name</div>
+                                            <div class="student-score">@FormatScore(student.Score)</div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="no-attempts" style="padding: 15px; text-align: center; color: #95a5a6; font-style: italic;">
+                            No attempts yet
+                        </div>
+                    }
+                    
+                    <div class="quiz-card-footer">
+                        <button class="quiz-card-btn quiz-card-btn-primary" @onclick="() => OpenLeaderboard(quiz.Id)" @onclick:stopPropagation="true">
+                            📊 View Full Leaderboard
+                        </button>
+                        <button class="quiz-card-btn quiz-card-btn-secondary" @onclick="() => ViewQuizTakers(quiz.Id)" @onclick:stopPropagation="true">
+                            👥 Quiz Takers
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
 </div>
 
 @code {
     private List<Quiz> quizzes = new();
+    private bool loading = true;
+    private string currentUserPhoto = string.Empty;
 
     protected override void OnInitialized()
     {
-        quizzes = new List<Quiz>
+        try
         {
-            new Quiz { Id = 1, Title = "Quiz #1", Description = "General Knowledge Quiz" },
-            new Quiz { Id = 2, Title = "Quiz #2", Description = "Science and Nature" },
-            new Quiz { Id = 3, Title = "Quiz #3", Description = "Math Fundamentals" },
-            new Quiz { Id = 4, Title = "Quiz #4", Description = "History and Politics" },
-        };
+            // Load current user's photo
+            var teacherId = UserSessionService.CurrentUserId ?? 0;
+            if (teacherId > 0)
+            {
+                try
+                {
+                    var user = _context.Users.FirstOrDefault(u => u.Id == teacherId);
+                    currentUserPhoto = user?.PhotoPath ?? string.Empty;
+                }
+                catch { }
+            }
+
+            // Get all published quizzes
+            quizzes = QuizService.GetPublishedQuizzes();
+            Console.WriteLine($"ViewLeaderboard: Loaded {quizzes.Count} published quizzes");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading quizzes: {ex.Message}");
+            quizzes = new List<Quiz>();
+        }
+        finally
+        {
+            loading = false;
+        }
     }
 
     private void OpenLeaderboard(int quizId)
@@ -252,10 +481,59 @@ body, html {
         Navigation.NavigateTo($"/leaderboard/{quizId}");
     }
 
-    public class Quiz
+    private void ViewQuizTakers(int quizId)
     {
-        public int Id { get; set; }
-        public string? Title { get; set; }
-        public string? Description { get; set; }
+        Console.WriteLine($"Navigating to quiz takers for quiz {quizId}");
+        Navigation.NavigateTo($"/quiz-takers/{quizId}");
+    }
+
+    private int GetAttemptCount(int quizId)
+    {
+        try
+        {
+            var attempts = QuizAttemptService.GetQuizAttempts(quizId);
+            return attempts.Count;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private List<StudentScore> GetTopStudents(int quizId, int topCount)
+    {
+        try
+        {
+            var attempts = QuizAttemptService.GetQuizAttempts(quizId);
+            return attempts
+                .OrderByDescending(a => a.Score)
+                .ThenByDescending(a => a.CorrectAnswers)
+                .Take(topCount)
+                .Select(a => new StudentScore
+                {
+                    Name = a.StudentName ?? "Unknown Student",
+                    Score = a.Score,
+                    CorrectAnswers = a.CorrectAnswers,
+                    TotalQuestions = a.TotalQuestions
+                })
+                .ToList();
+        }
+        catch
+        {
+            return new List<StudentScore>();
+        }
+    }
+
+    private string FormatScore(double score)
+    {
+        return $"{score:F1}%";
+    }
+
+    private class StudentScore
+    {
+        public string Name { get; set; } = "";
+        public double Score { get; set; }
+        public int CorrectAnswers { get; set; }
+        public int TotalQuestions { get; set; }
     }
 }

@@ -29,12 +29,12 @@
       "PackagePath": "staticwebassets/images/member4.jpg"
     },
     {
-      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/member5.jpg",
-      "PackagePath": "staticwebassets/images/member5.jpg"
-    },
-    {
       "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/member6.jpg",
       "PackagePath": "staticwebassets/images/member6.jpg"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/member7.jpg",
+      "PackagePath": "staticwebassets/images/member7.jpg"
     },
     {
       "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/professor.png",
@@ -47,6 +47,22 @@
     {
       "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/images/student-writing.png",
       "PackagePath": "staticwebassets/images/student-writing.png"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/uploads/avatars/user_1.jpg",
+      "PackagePath": "staticwebassets/uploads/avatars/user_1.jpg"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/uploads/avatars/user_2.jpg",
+      "PackagePath": "staticwebassets/uploads/avatars/user_2.jpg"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/uploads/avatars/user_4.jpg",
+      "PackagePath": "staticwebassets/uploads/avatars/user_4.jpg"
+    },
+    {
+      "Id": "/workspaces/OOP-Project/SmartQuiz/wwwroot/uploads/avatars/user_7.jpg",
+      "PackagePath": "staticwebassets/uploads/avatars/user_7.jpg"
     },
     {
       "Id": "obj/Debug/net8.0/staticwebassets/msbuild.SmartQuiz.Microsoft.AspNetCore.StaticWebAssets.props",
